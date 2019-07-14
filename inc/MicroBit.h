@@ -4,6 +4,10 @@ The MIT License (MIT)
 Copyright (c) 2016 British Broadcasting Corporation.
 This software is provided by Lancaster University by arrangement with the BBC.
 
+Modifications Copyright (c) 2016 Calliope GbR
+Modifications are provided by DELTA Systems (Georg Sommer) - Thomas Kern 
+und Björn Eberhardt GbR by arrangement with Calliope GbR. 
+
 Permission is hereby granted, free of charge, to any person obtaining a
 copy of this software and associated documentation files (the "Software"),
 to deal in the Software without restriction, including without limitation
@@ -47,8 +51,9 @@ DEALINGS IN THE SOFTWARE.
 #include "MicroBitButton.h"
 #include "MicroBitPin.h"
 #include "MicroBitCompass.h"
+#include "MicroBitCompass-bmx.h"
 #include "MicroBitCompassCalibrator.h"
-#include "MicroBitAccelerometer.h"
+#include "MicroBitAccelerometer-bmx.h"
 #include "MicroBitThermometer.h"
 #include "MicroBitLightSensor.h"
 #include "MicroBitMultiButton.h"
@@ -64,6 +69,9 @@ DEALINGS IN THE SOFTWARE.
 #include "MicroBitBLEManager.h"
 #include "MicroBitRadio.h"
 #include "MicroBitStorage.h"
+
+#include "CalliopeRGB.h"
+#include "CalliopeSoundMotor.h"
 
 // MicroBit::flags values
 #define MICROBIT_INITIALIZED                    0x01
@@ -90,19 +98,19 @@ class MicroBit
     uint8_t                     status;
 
     public:
-
+	
     // Serial Interface
     MicroBitSerial              serial;
 
 	// Reset Button
 	InterruptIn     		    resetButton;
-
+	
     // Persistent key value store
     MicroBitStorage             storage;
-
+	
     // I2C Interface
     MicroBitI2C                 i2c;
-
+	
     // Device level Message Bus abstraction
     MicroBitMessageBus          messageBus;
 
@@ -115,15 +123,19 @@ class MicroBit
     MicroBitCompass             &compass;
     MicroBitCompassCalibrator   compassCalibrator;
     MicroBitThermometer         thermometer;
-
+    
     //An object of available IO pins on the device
     MicroBitIO                  io;
-
+	
     // Bluetooth related member variables.
 	MicroBitBLEManager		    bleManager;
     MicroBitRadio               radio;
     BLEDevice                   *ble;
-
+	
+	//Calliope MINI specific devices
+	CalliopeRGB 				rgb;
+	CalliopeSoundMotor 			soundmotor;
+	
     /**
       * Constructor.
       *
@@ -184,7 +196,7 @@ class MicroBit
       * Delay execution for the given amount of time.
       *
       * If the scheduler is running, this will deschedule the current fiber and perform
-      * a power efficient, concurrent sleep operation.
+      * a power efficent, concurrent sleep operation.
       *
       * If the scheduler is disabled or we're running in an interrupt context, this
       * will revert to a busy wait.
@@ -424,7 +436,6 @@ inline void MicroBit::reset()
         // Wait a little while for the connection to drop.
         wait_ms(100);
     }
-
     microbit_reset();
 }
 
@@ -432,7 +443,7 @@ inline void MicroBit::reset()
   * Delay execution for the given amount of time.
   *
   * If the scheduler is running, this will deschedule the current fiber and perform
-  * a power efficient, concurrent sleep operation.
+  * a power efficent, concurrent sleep operation.
   *
   * If the scheduler is disabled or we're running in an interrupt context, this
   * will revert to a busy wait.
@@ -464,7 +475,7 @@ inline void MicroBit::sleep(uint32_t milliseconds)
   * than the hardware random number generator built int the processor, which takes
   * a long time and uses a lot of energy.
   *
-  * KIDS: You shouldn't use this is the real world to generate cryptographic keys though...
+  * KIDS: You shouldn't use this is the real world to generte cryptographic keys though...
   * have a think why not. :-)
   *
   * @param max the upper range to generate a number for. This number cannot be negative.
